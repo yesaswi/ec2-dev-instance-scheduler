@@ -15,14 +15,57 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install boto3
+          pip install boto3 awscli
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - name: Deploy to AWS Lambda
+      - name: Create or update IAM role
         run: |
+          ROLE_NAME="EC2DevInstanceSchedulerRole"
+          if ! aws iam get-role --role-name $ROLE_NAME > /dev/null 2>&1; then
+            aws iam create-role --role-name $ROLE_NAME --assume-role-policy-document file://iam/trust_policy.json
+          fi
+          aws iam put-role-policy --role-name $ROLE_NAME --policy-name EC2DevInstanceSchedulerPolicy --policy-document file://iam/lambda_role_policy.json
+      - name: Create or update Lambda function
+        run: |
+          FUNCTION_NAME="EC2DevInstanceScheduler"
+          ROLE_ARN=$(aws iam get-role --role-name EC2DevInstanceSchedulerRole --query 'Role.Arn' --output text)
           zip -j deployment.zip src/lambda_function.py
-          aws lambda update-function-code --function-name EC2DevInstanceScheduler --zip-file fileb://deployment.zip
+          if ! aws lambda get-function --function-name $FUNCTION_NAME > /dev/null 2>&1; then
+            aws lambda create-function --function-name $FUNCTION_NAME \
+              --runtime python3.11 --role $ROLE_ARN \
+              --handler lambda_function.lambda_handler \
+              --zip-file fileb://deployment.zip
+          else
+            aws lambda update-function-code --function-name $FUNCTION_NAME --zip-file fileb://deployment.zip
+          fi
+      - name: Create or update EventBridge rule
+        run: |
+          RULE_NAME="EC2DevInstanceScheduler"
+          LAMBDA_ARN=$(aws lambda get-function --function-name EC2DevInstanceScheduler --query 'Configuration.FunctionArn' --output text)
+          if ! aws events describe-rule --name $RULE_NAME > /dev/null 2>&1; then
+            aws events put-rule --name $RULE_NAME \
+              --schedule-expression "cron(0 23 ? * MON-FRI *)" \
+              --state ENABLED \
+              --description "Triggers Lambda function to stop Dev EC2 instances daily at 7:00 PM EST"
+            aws events put-targets --rule $RULE_NAME --targets "Id"="1","Arn"="$LAMBDA_ARN"
+          else
+            aws events put-rule --name $RULE_NAME \
+              --schedule-expression "cron(0 23 ? * MON-FRI *)" \
+              --state ENABLED \
+              --description "Triggers Lambda function to stop Dev EC2 instances daily at 7:00 PM EST"
+            aws events put-targets --rule $RULE_NAME --targets "Id"="1","Arn"="$LAMBDA_ARN"
+          fi
+      - name: Add Lambda permission for EventBridge
+        run: |
+          FUNCTION_NAME="EC2DevInstanceScheduler"
+          RULE_ARN=$(aws events describe-rule --name EC2DevInstanceScheduler --query 'Arn' --output text)
+          aws lambda add-permission \
+            --function-name $FUNCTION_NAME \
+            --statement-id EventBridgeInvoke \
+            --action lambda:InvokeFunction \
+            --principal events.amazonaws.com \
+            --source-arn $RULE_ARN
