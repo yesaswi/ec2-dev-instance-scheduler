@@ -58,13 +58,13 @@ jobs:
           LAMBDA_ARN=$(aws lambda get-function --function-name EC2DevInstanceScheduler --query 'Configuration.FunctionArn' --output text)
           if ! aws events describe-rule --name $RULE_NAME > /dev/null 2>&1; then
             aws events put-rule --name $RULE_NAME \
-              --schedule-expression "cron(40 18 * * ? *)" \
+              --schedule-expression "cron(57 18 * * ? *)" \
               --state ENABLED \
               --description "Triggers Lambda function to stop Dev EC2 instances daily at 2:35 PM ET"
             aws events put-targets --rule $RULE_NAME --targets "Id"="1","Arn"="$LAMBDA_ARN"
           else
             aws events put-rule --name $RULE_NAME \
-              --schedule-expression "cron(40 18 * * ? *)" \
+              --schedule-expression "cron(57 18 * * ? *)" \
               --state ENABLED \
               --description "Triggers Lambda function to stop Dev EC2 instances daily at 2:35 PM ET"
             aws events put-targets --rule $RULE_NAME --targets "Id"="1","Arn"="$LAMBDA_ARN"
