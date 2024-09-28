@@ -1,0 +1,12 @@
+{
+  "Name": "EC2DevInstanceScheduler",
+  "ScheduleExpression": "cron(0 23 ? * MON-FRI *)",
+  "State": "ENABLED",
+  "Description": "Triggers Lambda function to stop Dev EC2 instances daily at 7:00 PM EST",
+  "Targets": [
+    {
+      "Id": "EC2DevInstanceSchedulerLambda",
+      "Arn": "arn:aws:lambda:REGION:ACCOUNT_ID:function:EC2DevInstanceScheduler"
+    }
+  ]
+}
