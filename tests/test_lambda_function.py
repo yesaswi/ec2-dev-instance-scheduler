@@ -1,10 +1,10 @@
 import boto3
-from moto import mock_ec2
+from moto import mock_aws
 
 from src.lambda_function import lambda_handler
 
 
-@mock_ec2
+@mock_aws
 def test_lambda_handler():
     # Create a mock EC2 client
     ec2 = boto3.client('ec2', region_name='us-east-1')
