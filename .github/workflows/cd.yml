@@ -42,7 +42,15 @@ jobs:
               --timeout 60
           else
             aws lambda update-function-code --function-name $FUNCTION_NAME --zip-file fileb://deployment.zip
-            aws lambda update-function-configuration --function-name $FUNCTION_NAME --timeout 60
+            for i in {1..5}; do
+              if aws lambda update-function-configuration --function-name $FUNCTION_NAME --timeout 60; then
+                echo "Function configuration updated successfully"
+                break
+              else
+                echo "Update failed, retrying in 10 seconds..."
+                sleep 10
+              fi
+            done
           fi
       - name: Create or update EventBridge rule
         run: |
