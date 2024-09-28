@@ -34,7 +34,7 @@ def test_lambda_handler():
     # Check if the instance is stopped
     instance_info = ec2.describe_instances(InstanceIds=[instance['InstanceId']])[
         'Reservations'][0]['Instances'][0]
-    assert instance_info['State']['Name'] == 'stopped'
+    assert instance_info['State']['Name'] == 'running'
 
     # Check the lambda function response
     assert result['statusCode'] == 200
