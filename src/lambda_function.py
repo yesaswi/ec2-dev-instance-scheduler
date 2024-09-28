@@ -7,7 +7,7 @@ logger.setLevel(logging.INFO)
 
 
 def lambda_handler(event, context):
-    ec2 = boto3.resource('ec2')
+    ec2 = boto3.resource('ec2', region_name='us-east-1')
 
     instances = ec2.instances.filter(
         Filters=[
