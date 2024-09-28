@@ -38,9 +38,11 @@ jobs:
             aws lambda create-function --function-name $FUNCTION_NAME \
               --runtime python3.11 --role $ROLE_ARN \
               --handler lambda_function.lambda_handler \
-              --zip-file fileb://deployment.zip
+              --zip-file fileb://deployment.zip \
+              --timeout 60
           else
             aws lambda update-function-code --function-name $FUNCTION_NAME --zip-file fileb://deployment.zip
+            aws lambda update-function-configuration --function-name $FUNCTION_NAME --timeout 60
           fi
       - name: Create or update EventBridge rule
         run: |
