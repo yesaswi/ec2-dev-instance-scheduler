@@ -2,7 +2,7 @@
   "Name": "EC2DevInstanceScheduler",
   "ScheduleExpression": "cron(07 19 * * ? *)",
   "State": "ENABLED",
-  "Description": "Triggers Lambda function to stop Dev EC2 instances daily at 2:57 PM ET",
+  "Description": "Triggers Lambda function to stop Dev EC2 instances daily at 19:07 UTC (e.g., 2:07 PM EST / 3:07 PM EDT)",
   "Targets": [
     {
       "Id": "EC2DevInstanceSchedulerLambda",
