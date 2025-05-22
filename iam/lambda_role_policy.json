@@ -3,8 +3,18 @@
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": ["ec2:DescribeInstances", "ec2:StopInstances"],
+      "Action": "ec2:DescribeInstances",
       "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ec2:StopInstances",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "ec2:ResourceTag/Environment": "Dev"
+        }
+      }
     },
     {
       "Effect": "Allow",
